@@ -18,3 +18,5 @@ Makefile
 
 # OS
 .DS_Store
+
+external/
