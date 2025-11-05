@@ -1,0 +1,31 @@
+# BoltDBGConfig.cmake.in
+# Package configuration file for BoltDBG
+
+@PACKAGE_INIT@
+
+# Provide package version
+set(BOLTDBG_VERSION @PROJECT_VERSION@)
+
+# Check if dependencies are available
+include(CMakeFindDependencyMacro)
+
+# Find required dependencies
+find_dependency(OpenGL REQUIRED)
+
+# Optional: Find GLFW if needed
+# find_dependency(glfw3 3.3)
+
+# Include the targets file
+include("${CMAKE_CURRENT_LIST_DIR}/BoltDBGTargets.cmake")
+
+# Provide variables for users
+set(BoltDBG_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+set(BoltDBG_LIBRARIES BoltDBG::Core)
+
+# Check all required components are available
+check_required_components(BoltDBG)
+
+# Print info message
+if(NOT BoltDBG_FIND_QUIETLY)
+    message(STATUS "Found BoltDBG ${BOLTDBG_VERSION}")
+endif()

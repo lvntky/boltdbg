@@ -1,0 +1,87 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug Build",
+      "description": "Debug build with symbols",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "BOLTDBG_BUILD_TESTS": "ON",
+        "BOLTDBG_BUILD_EXAMPLES": "ON",
+        "BOLTDBG_USE_SYSTEM_LIBS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release Build",
+      "description": "Optimized release build",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "BOLTDBG_BUILD_TESTS": "OFF",
+        "BOLTDBG_BUILD_EXAMPLES": "OFF",
+        "BOLTDBG_USE_SYSTEM_LIBS": "ON"
+      }
+    },
+    {
+      "name": "debug-asan",
+      "displayName": "Debug with Address Sanitizer",
+      "description": "Debug build with ASAN enabled",
+      "binaryDir": "${sourceDir}/build/debug-asan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "BOLTDBG_BUILD_TESTS": "ON",
+        "BOLTDBG_ENABLE_ASAN": "ON",
+        "BOLTDBG_USE_SYSTEM_LIBS": "ON"
+      }
+    },
+    {
+      "name": "debug-ubsan",
+      "displayName": "Debug with UBSan",
+      "description": "Debug build with Undefined Behavior Sanitizer",
+      "binaryDir": "${sourceDir}/build/debug-ubsan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "BOLTDBG_BUILD_TESTS": "ON",
+        "BOLTDBG_ENABLE_UBSAN": "ON",
+        "BOLTDBG_USE_SYSTEM_LIBS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "debug-asan",
+      "configurePreset": "debug-asan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-asan",
+      "configurePreset": "debug-asan",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}
