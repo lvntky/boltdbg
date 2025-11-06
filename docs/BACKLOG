@@ -1,0 +1,654 @@
+# BoltDBG Technical Implementation Backlog
+
+## Project Status: GREENFIELD - Nothing Implemented Yet
+
+This is a technical implementation backlog for building BoltDBG from scratch. All features need to be implemented.
+
+---
+
+## SPRINT 0 - Project Foundation (Week 1-2)
+
+### Development Environment Setup
+
+- **BOLT-001: Repository Structure Setup**
+  - Initialize Git repository with .gitignore
+  - Set up directory structure (src/, external/, docs/, tests/)
+  - Create README.md skeleton
+  - Add MIT license file
+  - Effort: 1 point
+
+- **BOLT-002: CMake Build System**
+  - Create root CMakeLists.txt with C++17 requirements
+  - Configure compiler flags (warnings, optimizations)
+  - Set up Debug and Release configurations
+  - Add install targets
+  - Effort: 3 points
+
+- **BOLT-003: Integrate Dear ImGui**
+  - Add Dear ImGui as git submodule
+  - Create ImGui CMake integration
+  - Set up OpenGL3 backend
+  - Configure GLFW for window management
+  - Test basic window creation
+  - Effort: 5 points
+
+- **BOLT-004: CI/CD Pipeline**
+  - GitHub Actions for Linux (Ubuntu, GCC/Clang)
+  - GitHub Actions for macOS (Xcode)
+  - GitHub Actions for Windows (MSVC)
+  - Automated build verification
+  - Effort: 5 points
+
+- **BOLT-005: Basic Application Window**
+  - Create main.cpp entry point
+  - Initialize GLFW window
+  - Set up ImGui context and rendering loop
+  - Implement basic main menu bar (File, View, Debug, Help)
+  - Add FPS counter display
+  - Effort: 3 points
+
+---
+
+## SPRINT 1 - Core Platform Layer (Week 3-4)
+
+### Process Control - Linux Implementation
+
+- **BOLT-006: Linux Process Launch**
+  - Implement fork/exec to launch target program
+  - Set up ptrace(PTRACE_TRACEME) in child process
+  - Wait for child process initialization
+  - Handle command-line arguments passing
+  - Error handling and cleanup
+  - Effort: 5 points
+
+- **BOLT-007: Linux Process Attach**
+  - Implement ptrace(PTRACE_ATTACH, pid)
+  - Handle permission checks
+  - Wait for process to stop (SIGSTOP)
+  - Store process handle/state
+  - Detach functionality
+  - Effort: 5 points
+
+- **BOLT-008: Linux Memory Operations**
+  - Implement memory read using ptrace(PTRACE_PEEKDATA)
+  - Implement memory write using ptrace(PTRACE_POKEDATA)
+  - Handle word-aligned reads/writes
+  - Add memory read/write error handling
+  - Effort: 5 points
+
+- **BOLT-009: Linux Register Access**
+  - Read registers using ptrace(PTRACE_GETREGS)
+  - Write registers using ptrace(PTRACE_SETREGS)
+  - Support x86_64 general purpose registers
+  - Support instruction pointer manipulation
+  - Effort: 3 points
+
+- **BOLT-010: Linux Continue/Step Operations**
+  - Implement continue (PTRACE_CONT)
+  - Implement single-step (PTRACE_SINGLESTEP)
+  - Wait for process events (waitpid)
+  - Handle SIGTRAP and other signals
+  - Effort: 5 points
+
+---
+
+## SPRINT 2 - Breakpoint Implementation (Week 5-6)
+
+### Software Breakpoint Engine
+
+- **BOLT-011: Breakpoint Manager Class**
+  - Design Breakpoint class (address, original_byte, enabled)
+  - Implement BreakpointManager container
+  - Add/remove/enable/disable breakpoint APIs
+  - Store breakpoints by address (std::map)
+  - Effort: 3 points
+
+- **BOLT-012: Software Breakpoint Setting**
+  - Read original instruction byte at address
+  - Write INT3 (0xCC) instruction
+  - Store original byte for restoration
+  - Handle memory protection (make writable if needed)
+  - Effort: 5 points
+
+- **BOLT-013: Breakpoint Hit Detection**
+  - Detect SIGTRAP from waitpid
+  - Read instruction pointer
+  - Adjust IP back by 1 (past INT3)
+  - Look up breakpoint in manager
+  - Effort: 3 points
+
+- **BOLT-014: Breakpoint Continue Logic**
+  - Restore original instruction
+  - Single-step past instruction
+  - Re-insert breakpoint
+  - Continue execution
+  - Handle edge cases (BP removed during step)
+  - Effort: 5 points
+
+- **BOLT-015: Multiple Breakpoint Support**
+  - Test multiple breakpoints in same function
+  - Test breakpoints in different functions
+  - Verify no interference between breakpoints
+  - Effort: 3 points
+
+---
+
+## SPRINT 3 - Symbol Parsing Foundation (Week 7-8)
+
+### DWARF Debug Info Parser
+
+- **BOLT-016: ELF Binary Parser**
+  - Parse ELF header (e_ident, e_type, e_machine)
+  - Read section headers table
+  - Find .debug_info, .debug_line, .debug_abbrev sections
+  - Load section data into memory
+  - Effort: 5 points
+
+- **BOLT-017: DWARF Abbreviation Table Parser**
+  - Parse .debug_abbrev section
+  - Build abbreviation table (code -> attributes)
+  - Store attribute forms and names
+  - Handle DW_FORM_* types
+  - Effort: 8 points
+
+- **BOLT-018: DWARF Info Entry (DIE) Parser**
+  - Parse DIEs from .debug_info
+  - Extract compilation units
+  - Build DIE tree structure
+  - Handle DW_TAG_subprogram, DW_TAG_variable
+  - Effort: 13 points
+
+- **BOLT-019: Line Number Program Parser**
+  - Parse .debug_line section header
+  - Implement line number state machine
+  - Build address-to-line mapping
+  - Build file name table
+  - Effort: 13 points
+
+- **BOLT-020: Symbol Table Class**
+  - Design Symbol class (name, address, type, file, line)
+  - Implement SymbolTable container
+  - Address-to-symbol lookup (binary search)
+  - Name-to-symbol lookup (hash map)
+  - Effort: 5 points
+
+---
+
+## SPRINT 4 - Basic UI Panels (Week 9-10)
+
+### Source Code Viewer
+
+- **BOLT-021: Source File Manager**
+  - Load source files from disk
+  - Cache file contents in memory
+  - Handle file not found errors
+  - Track currently displayed file
+  - Effort: 3 points
+
+- **BOLT-022: Source Code Display Panel**
+  - Create ImGui window for source code
+  - Display file contents with line numbers
+  - Implement vertical scrolling
+  - Highlight current execution line (yellow background)
+  - Monospace font rendering
+  - Effort: 5 points
+
+- **BOLT-023: Breakpoint Visual Indicators**
+  - Draw red circle next to line numbers for breakpoints
+  - Toggle breakpoint on line number click
+  - Show disabled breakpoints (hollow circle)
+  - Handle click events on line number gutter
+  - Effort: 5 points
+
+- **BOLT-024: Source Navigation**
+  - Implement "Go to Line" dialog (Ctrl+G)
+  - Auto-scroll to current execution line
+  - Keep current line centered when stopped
+  - Effort: 3 points
+
+### Control Toolbar
+
+- **BOLT-025: Debug Control Buttons**
+  - Create toolbar with ImGui buttons
+  - Run/Continue button (green play icon)
+  - Pause button (pause icon)
+  - Stop button (red square)
+  - Step Over button (curved arrow)
+  - Step Into button (down arrow)
+  - Step Out button (up arrow)
+  - Wire buttons to debugger control functions
+  - Effort: 5 points
+
+---
+
+## SPRINT 5 - Variable Inspection (Week 11-12)
+
+### Variable Reader
+
+- **BOLT-026: Local Variable Discovery**
+  - Parse DW_TAG_variable DIEs in current function
+  - Extract variable names and types
+  - Get variable location (DW_AT_location)
+  - Handle frame-relative locations (RBP offset)
+  - Effort: 8 points
+
+- **BOLT-027: Variable Value Reading**
+  - Calculate variable address from location expression
+  - Read memory at variable address
+  - Interpret bytes based on type (int, char, pointer, etc.)
+  - Handle different integer sizes (int8, int16, int32, int64)
+  - Effort: 8 points
+
+- **BOLT-028: Variables Panel UI**
+  - Create ImGui tree view for variables
+  - Display variable name, type, value, address
+  - Show local variables in current scope
+  - Update values when execution stops
+  - Effort: 5 points
+
+- **BOLT-029: Pointer Following**
+  - Detect pointer types
+  - Read pointer value (address)
+  - Add "→" tree node to dereference
+  - Recursively display pointed-to value
+  - Handle null pointers safely
+  - Effort: 5 points
+
+- **BOLT-030: Array Display**
+  - Detect array types
+  - Display array elements as tree children [0], [1], etc.
+  - Limit initial display to first 100 elements
+  - Add "Load more..." option for large arrays
+  - Effort: 5 points
+
+---
+
+## SPRINT 6 - Call Stack (Week 13-14)
+
+### Stack Unwinding
+
+- **BOLT-031: Frame Pointer Walking**
+  - Read RBP (frame pointer) register
+  - Follow frame pointer chain
+  - Read return addresses from stack
+  - Detect stack bottom (null frame pointer)
+  - Effort: 5 points
+
+- **BOLT-032: DWARF CFI Parser**
+  - Parse .eh_frame or .debug_frame section
+  - Implement CFA (Canonical Frame Address) calculation
+  - Handle DW_CFA_* opcodes
+  - Build unwind info for each address
+  - Effort: 13 points
+
+- **BOLT-033: Robust Stack Unwinding**
+  - Use DWARF unwind info for frame traversal
+  - Fall back to frame pointer walking if no unwind info
+  - Handle leaf functions (no frame setup)
+  - Validate frame addresses
+  - Effort: 8 points
+
+- **BOLT-034: Call Stack Panel UI**
+  - Create ImGui list for stack frames
+  - Display frame index, function name, file:line
+  - Highlight current frame
+  - Click to navigate to frame's source location
+  - Effort: 5 points
+
+- **BOLT-035: Frame Variable Inspection**
+  - Load variables for selected stack frame
+  - Calculate variable locations relative to frame
+  - Update Variables panel when frame changes
+  - Effort: 5 points
+
+---
+
+## SPRINT 7 - Memory Viewer (Week 15-16)
+
+### Memory Display
+
+- **BOLT-036: Memory Viewer Panel**
+  - Create ImGui window for memory view
+  - Input field for memory address (hex)
+  - Display bytes in hexadecimal (configurable bytes per row)
+  - Display ASCII representation alongside hex
+  - Effort: 8 points
+
+- **BOLT-037: Memory Navigation**
+  - Scroll through memory (page up/down)
+  - Jump to address input
+  - "Go to" address context menu
+  - Previous/Next navigation history
+  - Effort: 5 points
+
+- **BOLT-038: Memory Editing**
+  - Click on hex byte to edit
+  - Validate hex input
+  - Write modified byte to process memory
+  - Highlight modified bytes
+  - Undo support for edits
+  - Effort: 5 points
+
+---
+
+## SPRINT 8 - Register Display (Week 17)
+
+### CPU Register Viewer
+
+- **BOLT-039: Register Panel UI**
+  - Create ImGui window for registers
+  - Display x86_64 general purpose registers (RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP, R8-R15)
+  - Display RIP (instruction pointer)
+  - Display RFLAGS register with decoded flags (CF, ZF, SF, etc.)
+  - Format as hexadecimal with 0x prefix
+  - Effort: 5 points
+
+- **BOLT-040: Register Change Highlighting**
+  - Store previous register values
+  - Highlight registers that changed (red text)
+  - Fade highlight over time
+  - Effort: 3 points
+
+---
+
+## SPRINT 9 - Windows Platform Support (Week 18-20)
+
+### Windows Debug API Implementation
+
+- **BOLT-041: Windows Process Launch**
+  - Implement CreateProcess with DEBUG_PROCESS flag
+  - Handle process and thread creation events
+  - Store process and thread handles
+  - Effort: 5 points
+
+- **BOLT-042: Windows Debug Event Loop**
+  - Implement WaitForDebugEvent loop
+  - Handle EXCEPTION_DEBUG_EVENT (breakpoints, single-step)
+  - Handle CREATE_PROCESS_DEBUG_EVENT
+  - Handle EXIT_PROCESS_DEBUG_EVENT
+  - ContinueDebugEvent to resume
+  - Effort: 8 points
+
+- **BOLT-043: Windows Memory Operations**
+  - ReadProcessMemory API wrapper
+  - WriteProcessMemory API wrapper
+  - VirtualProtectEx for memory permissions
+  - Handle access violations
+  - Effort: 3 points
+
+- **BOLT-044: Windows Register Access**
+  - GetThreadContext to read registers
+  - SetThreadContext to write registers
+  - Map CONTEXT structure to cross-platform register abstraction
+  - Effort: 3 points
+
+- **BOLT-045: Windows Symbol Loading**
+  - Parse PE/COFF executable format
+  - Load PDB files using DbgHelp API (SymInitialize, SymLoadModule64)
+  - Extract symbol information (SymEnumSymbols)
+  - Map line numbers (SymGetLineFromAddr64)
+  - Effort: 13 points
+
+---
+
+## SPRINT 10 - macOS Platform Support (Week 21-23)
+
+### macOS Implementation
+
+- **BOLT-046: macOS Process Control**
+  - Use ptrace with macOS-specific flags
+  - Handle Mach exception ports
+  - Implement task_for_pid for attach
+  - Handle SIP (System Integrity Protection) restrictions
+  - Effort: 8 points
+
+- **BOLT-047: macOS Debug Symbol Parsing**
+  - Parse Mach-O executable format
+  - Load dSYM bundles
+  - Parse DWARF from Mach-O sections
+  - Handle universal binaries (fat binaries)
+  - Effort: 13 points
+
+---
+
+## SPRINT 11 - Expression Evaluation (Week 24-25)
+
+### Basic Expression Evaluator
+
+- **BOLT-048: Expression Tokenizer**
+  - Tokenize C expressions (identifiers, operators, literals)
+  - Handle operators: +, -, *, /, %, &, |, ^, <<, >>, ==, !=, <, >, <=, >=
+  - Recognize variable names
+  - Parse integer and hex literals
+  - Effort: 5 points
+
+- **BOLT-049: Expression Parser**
+  - Build abstract syntax tree (AST)
+  - Implement operator precedence
+  - Handle parentheses
+  - Support unary operators (-, !, ~, *, &)
+  - Effort: 8 points
+
+- **BOLT-050: Expression Evaluator**
+  - Evaluate AST recursively
+  - Look up variable values from debug info
+  - Perform arithmetic and logical operations
+  - Handle type casting
+  - Return result value and type
+  - Effort: 8 points
+
+- **BOLT-051: Expression Evaluation UI**
+  - Create "Evaluate Expression" dialog
+  - Input field for expression
+  - Display result (value, type, address)
+  - Show evaluation errors
+  - Expression history dropdown
+  - Effort: 5 points
+
+---
+
+## SPRINT 12 - Disassembly View (Week 26-27)
+
+### Assembly Display
+
+- **BOLT-052: Disassembler Integration**
+  - Integrate Capstone disassembly library
+  - Disassemble instructions from memory
+  - Format assembly text (mnemonic + operands)
+  - Effort: 5 points
+
+- **BOLT-053: Disassembly Panel UI**
+  - Create ImGui window for disassembly
+  - Display address, bytes, instruction
+  - Highlight current instruction (yellow)
+  - Show breakpoint indicators
+  - Effort: 5 points
+
+- **BOLT-054: Mixed Source/Assembly View**
+  - Interleave source lines with assembly
+  - Map source lines to instruction addresses
+  - Collapsible source blocks
+  - Toggle between source-only, assembly-only, mixed
+  - Effort: 8 points
+
+---
+
+## SPRINT 13 - Multi-threading Support (Week 28-29)
+
+### Thread Management
+
+- **BOLT-055: Thread Enumeration**
+  - List all threads in target process
+  - Linux: parse /proc/[pid]/task/
+  - Windows: Thread32First/Thread32Next
+  - Store thread IDs and handles
+  - Effort: 5 points
+
+- **BOLT-056: Thread Control**
+  - Suspend/resume individual threads
+  - Set current thread context
+  - Continue/step specific threads
+  - Effort: 5 points
+
+- **BOLT-057: Thread Panel UI**
+  - Create ImGui list of threads
+  - Display thread ID, name, state
+  - Highlight current thread
+  - Click to switch thread context
+  - Show each thread's current location
+  - Effort: 5 points
+
+- **BOLT-058: Per-Thread Call Stack**
+  - Unwind stack for selected thread
+  - Update call stack panel on thread change
+  - Effort: 3 points
+
+---
+
+## SPRINT 14 - Configuration & Persistence (Week 30)
+
+### Settings System
+
+- **BOLT-059: Configuration File Structure**
+  - Define JSON schema for settings
+  - Platform-specific config file locations
+  - Load config on startup, save on exit
+  - Handle missing or corrupted config
+  - Effort: 3 points
+
+- **BOLT-060: Settings UI**
+  - Create Settings dialog (Edit > Preferences)
+  - Tabbed interface (General, Editor, Debugger, UI)
+  - Apply/Save/Cancel buttons
+  - Live preview where applicable
+  - Effort: 8 points
+
+- **BOLT-061: Layout Persistence**
+  - Save ImGui window positions/sizes to config
+  - Save docking layout
+  - Restore layout on startup
+  - Effort: 3 points
+
+- **BOLT-062: Breakpoint Persistence**
+  - Save breakpoints to project file
+  - Associate breakpoints with source file:line
+  - Load breakpoints on project open
+  - Handle source file changes gracefully
+  - Effort: 5 points
+
+---
+
+## SPRINT 15 - Polish & Stability (Week 31-32)
+
+### Error Handling & UX
+
+- **BOLT-063: Comprehensive Error Messages**
+  - User-friendly error dialogs for common failures
+  - Detailed error logging for debugging
+  - Recovery suggestions in error messages
+  - Effort: 5 points
+
+- **BOLT-064: Loading Indicators**
+  - Progress bar for symbol loading
+  - Spinner for long operations
+  - "Loading..." overlays on panels
+  - Effort: 3 points
+
+- **BOLT-065: Keyboard Shortcuts**
+  - Implement all documented shortcuts (F5, F9, F10, F11, Ctrl+O, etc.)
+  - Shortcut conflict detection
+  - Customizable keybindings
+  - Effort: 5 points
+
+- **BOLT-066: Memory Safety Audit**
+  - Run Valgrind on entire codebase
+  - Fix all memory leaks
+  - Fix buffer overruns
+  - Add ASAN build configuration
+  - Effort: 8 points
+
+- **BOLT-067: Cross-Platform Testing**
+  - Test all features on Ubuntu, Fedora, Arch
+  - Test on macOS (Intel and Apple Silicon)
+  - Test on Windows 10 and 11
+  - Document platform-specific quirks
+  - Effort: 13 points
+
+---
+
+## SPRINT 16 - Documentation & Release (Week 33-34)
+
+### Release Preparation
+
+- **BOLT-068: User Documentation**
+  - Write comprehensive README
+  - Create user guide (installation, usage, troubleshooting)
+  - Write keyboard shortcuts reference
+  - Record demo video
+  - Effort: 13 points
+
+- **BOLT-069: Developer Documentation**
+  - Document architecture and code structure
+  - Write contribution guidelines
+  - Create coding style guide
+  - Document platform abstraction layer
+  - Effort: 8 points
+
+- **BOLT-070: Package Creation**
+  - Create .deb package for Debian/Ubuntu
+  - Create .rpm package for Fedora/RHEL
+  - Create Homebrew formula for macOS
+  - Create Windows installer with NSIS
+  - Effort: 13 points
+
+- **BOLT-071: Release Automation**
+  - GitHub Actions for release builds
+  - Automated package signing
+  - Generate release notes from changelog
+  - Upload artifacts to GitHub Releases
+  - Effort: 8 points
+
+---
+
+## Technical Debt & Future Architecture
+
+- **BOLT-072: Logging Framework**
+  - Implement structured logging (spdlog)
+  - Log levels (DEBUG, INFO, WARN, ERROR)
+  - Rotating log files
+  - Effort: 5 points
+
+- **BOLT-073: Platform Abstraction Layer**
+  - Define abstract debugger interface
+  - Separate platform-specific implementations
+  - Factory pattern for creating platform debugger
+  - Effort: 8 points
+
+- **BOLT-074: Symbol Cache System**
+  - Cache parsed symbols to disk
+  - Invalidate cache on binary change
+  - Dramatically speed up subsequent launches
+  - Effort: 8 points
+
+- **BOLT-075: Plugin Architecture**
+  - Design plugin API
+  - Dynamic library loading
+  - Plugin discovery and registration
+  - Effort: 13 points
+
+---
+
+## Estimated Timeline
+
+**Total: 34 weeks (8.5 months)**
+
+- Foundation: 2 weeks
+- Core Platform: 12 weeks  
+- UI Implementation: 10 weeks
+- Multi-platform: 6 weeks
+- Polish & Release: 4 weeks
+
+
+---
+
+*This is a ground-up implementation backlog. All features must be built from scratch.*
