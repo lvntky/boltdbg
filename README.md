@@ -1,7 +1,8 @@
 # BoltDBG
 
-⚡ A lightning-fast, modern graphical debugger for C programs built from the ground up with Dear ImGui.
-
+ A lightning-fast, modern graphical debugger for C programs built from the ground up with Dear ImGui.
+ 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/39f61551d6eb459489d32414863cdc3f)](https://app.codacy.com/gh/lvntky/boltdbg/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
