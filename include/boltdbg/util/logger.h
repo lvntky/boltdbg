@@ -7,13 +7,14 @@
  * Use Log::get() anywhere to obtain the shared logger.
  */
 
-#include <memory>
 #include <spdlog/spdlog.h>
 
-namespace Log { // NOTE: capital 'L' to avoid collision with C math 'log'
-    // Return a reference to a shared_ptr logger initialized on first use.
-    std::shared_ptr<spdlog::logger>& get();
-}
+#include <memory>
+
+namespace Log {  // NOTE: capital 'L' to avoid collision with C math 'log'
+// Return a reference to a shared_ptr logger initialized on first use.
+std::shared_ptr<spdlog::logger>& get();
+}  // namespace Log
 
 // Handy logger macros (use Log with capital L)
 #define LOG_TRACE(...)    ::Log::get()->trace(__VA_ARGS__)
@@ -23,4 +24,4 @@ namespace Log { // NOTE: capital 'L' to avoid collision with C math 'log'
 #define LOG_ERROR(...)    ::Log::get()->error(__VA_ARGS__)
 #define LOG_CRITICAL(...) ::Log::get()->critical(__VA_ARGS__)
 
-#endif // BOLTDBG_UTIL_LOGGER_H_
+#endif  // BOLTDBG_UTIL_LOGGER_H_

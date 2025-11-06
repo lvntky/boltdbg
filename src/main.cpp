@@ -8,115 +8,111 @@
 // GL loader (glad) - include after GLFW_INCLUDE_NONE so glad can provide GL
 // headers
 #if __has_include("glad/glad.h")
-#include <glad/glad.h>
-#define HAVE_GLAD 1
+    #include <glad/glad.h>
+    #define HAVE_GLAD 1
 #else
-#define HAVE_GLAD 0
+    #define HAVE_GLAD 0
 #endif
 
 // Now include ImGui and its backends (they expect glfw + GL loader to be
 // present)
-#include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include "imgui.h"
 
+#include <boltdbg/core/process_control.h>
 #include <boltdbg/util/logger.h>
 
-int main(int argc, char **argv)
-{
+int main(int argc, char** argv) {
+    core::ProcessControl processController;
+    processController.launchTarget("test");
 
-  if(!glfwInit())
-    {
-      LOG_ERROR("Failed to initialize GLFW");
-      return 1;
+    if (!glfwInit()) {
+        LOG_ERROR("Failed to initialize GLFW");
+        return 1;
     }
 
-  // GL settings (3.3 core as example)
-  const char *glsl_version = "#version 330";
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    // GL settings (3.3 core as example)
+    const char* glsl_version = "#version 330";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 #if __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-  GLFWwindow *window
-    = glfwCreateWindow(1280, 720, "BoltDBG", NULL, NULL);
-  if(!window)
-    {
-      LOG_ERROR("Failed to create GLFW window");
-      glfwTerminate();
-      return 1;
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "BoltDBG", NULL, NULL);
+    if (!window) {
+        LOG_ERROR("Failed to create GLFW window");
+        glfwTerminate();
+        return 1;
     }
-  glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
 
 #if HAVE_GLAD
-  if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-      LOG_ERROR("Failed to initialize GLAD");
-      return 1;
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        LOG_ERROR("Failed to initialize GLAD");
+        return 1;
     }
 #else
-  LOG_WARN("GLAD not detected at compile-time. If you experience GL "
-               "symbol errors, add glad.");
+    LOG_WARN("GLAD not detected at compile-time. If you experience GL "
+             "symbol errors, add glad.");
 #endif
 
-  // ImGui init
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-  ImGui::StyleColorsDark();
+    // ImGui init
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    ImGui::StyleColorsDark();
 
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
-  LOG_INFO("Entering main loop.");
+    LOG_INFO("Entering main loop.");
 
-  bool show_demo = false;
-  int click_count = 0;
+    bool show_demo = false;
+    int click_count = 0;
 
-  while(!glfwWindowShouldClose(window))
-    {
-      glfwPollEvents();
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
 
-      ImGui_ImplOpenGL3_NewFrame();
-      ImGui_ImplGlfw_NewFrame();
-      ImGui::NewFrame();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-      ImGui::Begin("BoltDBG - Demo");
-      ImGui::Text("Hello from BoltDBG demo!");
-      if(ImGui::Button("Log info with spdlog"))
-        {
-          click_count++;
-          LOG_INFO("Button clicked {} times", click_count);
+        ImGui::Begin("BoltDBG - Demo");
+        ImGui::Text("Hello from BoltDBG demo!");
+        if (ImGui::Button("Log info with spdlog")) {
+            click_count++;
+            LOG_INFO("Button clicked {} times", click_count);
         }
-      ImGui::Text("Click count: %d", click_count);
-      ImGui::End();
+        ImGui::Text("Click count: %d", click_count);
+        ImGui::End();
 
-      if(show_demo)
-        ImGui::ShowDemoWindow(&show_demo);
+        if (show_demo)
+            ImGui::ShowDemoWindow(&show_demo);
 
-      ImGui::Render();
-      int display_w, display_h;
-      glfwGetFramebufferSize(window, &display_w, &display_h);
-      glViewport(0, 0, display_w, display_h);
-      glClearColor(0.1f, 0.12f, 0.14f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT);
-      ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui::Render();
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(0.1f, 0.12f, 0.14f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-      glfwSwapBuffers(window);
+        glfwSwapBuffers(window);
     }
 
-  // cleanup
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
+    // cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
-  glfwDestroyWindow(window);
-  glfwTerminate();
+    glfwDestroyWindow(window);
+    glfwTerminate();
 
-  LOG_INFO("BoltDBG demo exiting.");
-  return 0;
+    LOG_INFO("BoltDBG demo exiting.");
+    return 0;
 }

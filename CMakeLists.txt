@@ -227,6 +227,226 @@ if(BOLTDBG_BUILD_EXAMPLES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/CMake
     add_subdirectory(examples)
 endif()
 
+
+# ==============================================================================
+# Clang-Format Integration
+# ==============================================================================
+
+# Find clang-format executable
+find_program(CLANG_FORMAT_EXECUTABLE
+    NAMES clang-format-17 clang-format-16 clang-format-15 clang-format-14 clang-format
+    DOC "Path to clang-format executable"
+)
+
+if(CLANG_FORMAT_EXECUTABLE)
+    message(STATUS "Found clang-format: ${CLANG_FORMAT_EXECUTABLE}")
+    
+    # Get all project source files (excluding external dependencies)
+    file(GLOB_RECURSE ALL_CXX_SOURCE_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hxx
+    )
+    
+    # Add test files if they exist
+    if(BOLTDBG_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
+        file(GLOB_RECURSE TEST_SOURCE_FILES
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.h
+        )
+        list(APPEND ALL_CXX_SOURCE_FILES ${TEST_SOURCE_FILES})
+    endif()
+    
+    # Add example files if they exist
+    if(BOLTDBG_BUILD_EXAMPLES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples")
+        file(GLOB_RECURSE EXAMPLE_SOURCE_FILES
+            ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.h
+        )
+        list(APPEND ALL_CXX_SOURCE_FILES ${EXAMPLE_SOURCE_FILES})
+    endif()
+    
+    # Remove duplicates
+    list(REMOVE_DUPLICATES ALL_CXX_SOURCE_FILES)
+    
+    # Target: format - Format all source files in-place
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT_EXECUTABLE}
+        -i
+        -style=file
+        ${ALL_CXX_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Formatting all source files with clang-format"
+        VERBATIM
+    )
+    
+    # Target: format-check - Check formatting without modifying files (CI-friendly)
+    add_custom_target(format-check
+        COMMAND ${CLANG_FORMAT_EXECUTABLE}
+        --dry-run
+        --Werror
+        -style=file
+        ${ALL_CXX_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Checking code formatting (no modifications)"
+        VERBATIM
+    )
+    
+    # Target: format-diff - Show diff of formatting changes
+    add_custom_target(format-diff
+        COMMAND ${CLANG_FORMAT_EXECUTABLE}
+        --dry-run
+        --Werror
+        -style=file
+        --output-replacements-xml
+        ${ALL_CXX_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Showing formatting differences"
+        VERBATIM
+    )
+    
+    message(STATUS "Clang-format targets added: format, format-check, format-diff")
+else()
+    message(WARNING "clang-format not found. Format targets will not be available.")
+    message(WARNING "Install with: sudo apt-get install clang-format (Linux) or brew install llvm (macOS)")
+endif()
+
+# ==============================================================================
+# Clang-Tidy Integration
+# ==============================================================================
+
+# Find clang-tidy executable
+find_program(CLANG_TIDY_EXECUTABLE
+    NAMES clang-tidy-17 clang-tidy-16 clang-tidy-15 clang-tidy-14 clang-tidy
+    DOC "Path to clang-tidy executable"
+)
+
+if(CLANG_TIDY_EXECUTABLE)
+    message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXECUTABLE}")
+    
+    # Option to enable clang-tidy during build (slower but catches issues early)
+    option(ENABLE_CLANG_TIDY "Run clang-tidy during compilation" OFF)
+    
+    if(ENABLE_CLANG_TIDY)
+        # Enable clang-tidy for all targets
+        set(CMAKE_CXX_CLANG_TIDY 
+            ${CLANG_TIDY_EXECUTABLE};
+            --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy;
+            --header-filter=${CMAKE_CURRENT_SOURCE_DIR}/(src|include|tests|examples)/.*;
+            --warnings-as-errors=*;
+        )
+        message(STATUS "clang-tidy ENABLED during build (slower compilation)")
+        message(STATUS "Disable with: cmake -DENABLE_CLANG_TIDY=OFF")
+    else()
+        message(STATUS "clang-tidy available for manual runs")
+        message(STATUS "Enable during build with: cmake -DENABLE_CLANG_TIDY=ON")
+    endif()
+    
+    # Target: tidy - Run clang-tidy on all source files
+    add_custom_target(tidy
+        COMMAND ${CMAKE_COMMAND} -E echo "Running clang-tidy analysis..."
+        COMMAND ${CLANG_TIDY_EXECUTABLE}
+        -p ${CMAKE_BINARY_DIR}
+        --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy
+        ${ALL_CXX_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Running clang-tidy static analysis"
+        VERBATIM
+    )
+    
+    # Target: tidy-fix - Run clang-tidy and apply automatic fixes
+    add_custom_target(tidy-fix
+        COMMAND ${CMAKE_COMMAND} -E echo "Running clang-tidy with automatic fixes..."
+        COMMAND ${CMAKE_COMMAND} -E echo "This will modify your source files!"
+        COMMAND ${CLANG_TIDY_EXECUTABLE}
+        -p ${CMAKE_BINARY_DIR}
+        --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy
+        --fix
+        --fix-errors
+        ${ALL_CXX_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Running clang-tidy with automatic fixes (MODIFIES FILES)"
+        VERBATIM
+    )
+    
+    # Target: tidy-src - Run clang-tidy only on src/ directory (faster)
+    file(GLOB_RECURSE SRC_ONLY_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc
+    )
+    add_custom_target(tidy-src
+        COMMAND ${CLANG_TIDY_EXECUTABLE}
+        -p ${CMAKE_BINARY_DIR}
+        --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy
+        ${SRC_ONLY_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Running clang-tidy on src/ only"
+        VERBATIM
+    )
+    
+    message(STATUS "Clang-tidy targets added: tidy, tidy-fix, tidy-src")
+else()
+    message(WARNING "clang-tidy not found. Tidy targets will not be available.")
+    message(WARNING "Install with: sudo apt-get install clang-tidy (Linux) or brew install llvm (macOS)")
+endif()
+
+# ==============================================================================
+# Combined Quality Check Targets
+# ==============================================================================
+
+if(CLANG_FORMAT_EXECUTABLE AND CLANG_TIDY_EXECUTABLE)
+    # Target: check - Run both format-check and tidy (ideal for CI)
+    add_custom_target(check
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target format-check
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target tidy
+        COMMENT "Running all code quality checks (format + tidy)"
+        VERBATIM
+    )
+    
+    # Target: fix-all - Format code and apply tidy fixes
+    add_custom_target(fix-all
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target format
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target tidy-fix
+        COMMENT "Applying all automatic fixes (MODIFIES FILES)"
+        VERBATIM
+    )
+    
+    message(STATUS "Combined targets added: check, fix-all")
+    message(STATUS "")
+    message(STATUS "Code Quality Targets Available:")
+    message(STATUS "  make format        - Format all code")
+    message(STATUS "  make format-check  - Check formatting (CI)")
+    message(STATUS "  make tidy          - Run static analysis")
+    message(STATUS "  make tidy-fix      - Apply tidy fixes")
+    message(STATUS "  make check         - Run all checks (CI)")
+    message(STATUS "  make fix-all       - Apply all fixes")
+endif()
+
+# ==============================================================================
+# Documentation
+# ==============================================================================
+message(STATUS "")
+message(STATUS "Code Quality Tools:")
+if(CLANG_FORMAT_EXECUTABLE)
+    message(STATUS "  ✓ clang-format: ${CLANG_FORMAT_EXECUTABLE}")
+else()
+    message(STATUS "  ✗ clang-format: not found")
+endif()
+if(CLANG_TIDY_EXECUTABLE)
+    message(STATUS "  ✓ clang-tidy:   ${CLANG_TIDY_EXECUTABLE}")
+    if(ENABLE_CLANG_TIDY)
+        message(STATUS "    (enabled during build)")
+    endif()
+else()
+    message(STATUS "  ✗ clang-tidy:   not found")
+endif()
+message(STATUS "")
+
 # ============================================================================
 # Sanitizers flags summary (if your included Sanitizers.cmake sets flags, keep it)
 # (Sanitizers.cmake is optional and included at top if exists)

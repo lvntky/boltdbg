@@ -1,15 +1,16 @@
-#include <boltdbg/util/logger.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/ostream_sink.h>
 #include <spdlog/sinks/msvc_sink.h>
+#include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#include <boltdbg/util/logger.h>
+
 #include <vector>
 
 namespace Log {
 
 std::shared_ptr<spdlog::logger>& get() {
     static std::shared_ptr<spdlog::logger> logger = [] {
-
         std::vector<spdlog::sink_ptr> sinks;
         sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
         sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("app.log", true));
@@ -26,4 +27,4 @@ std::shared_ptr<spdlog::logger>& get() {
     return logger;
 }
 
-} // namespace log
+}  // namespace Log

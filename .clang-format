@@ -1,41 +1,192 @@
-BasedOnStyle:  GNU
+# Modern C++ Clang-Format Configuration for BoltDBG
+# Compatible with C++17 and Clang-Format 14+
+# Based on LLVM style with modern C++ best practices
+
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+IndentCaseLabels: true
+IndentCaseBlocks: false
+IndentGotoLabels: true
+IndentPPDirectives: BeforeHash
+IndentExternBlock: NoIndent
+IndentWrappedFunctionNames: false
+NamespaceIndentation: None
+
+# Alignment
 AlignAfterOpenBracket: Align
-AllowAllParametersOfDeclarationOnNextLine: false
-AllowShortBlocksOnASingleLine: true
-AllowShortCaseLabelsOnASingleLine: true
-AllowShortFunctionsOnASingleLine: All
-# Uncommenting these lines will sometimes result in lines following an
-# if(){} or for(){} block being attached to the end of the block.
-# AllowShortIfStatementsOnASingleLine: true
-# AllowShortLoopsOnASingleLine: true
-AlwaysBreakAfterDefinitionReturnType: None
+AlignArrayOfStructures: Right
+AlignConsecutiveAssignments: None
+AlignConsecutiveBitFields: Consecutive
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: Consecutive
+AlignEscapedNewlines: Right
+AlignOperands: Align
+AlignTrailingComments: true
+
+# Allow settings
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: false
+
+# Breaking
 AlwaysBreakAfterReturnType: None
-BreakBeforeBraces: Custom
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+BreakStringLiterals: true
+
+# Column limit
+ColumnLimit: 100
+
+# Comments
+ReflowComments: true
+SpacesBeforeTrailingComments: 2
+
+# Includes - Organized for BoltDBG project structure
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Main header (same name as source file)
+  - Regex: '^"(.*/)?(boltdbg|debugger|ui|core)/.*\.h(pp)?"$'
+    Priority: 1
+    SortPriority: 1
+  # Project headers from include/
+  - Regex: '^".*\.h(pp)?"$'
+    Priority: 2
+    SortPriority: 2
+  # ImGui headers
+  - Regex: '^<imgui'
+    Priority: 3
+    SortPriority: 3
+  # GLFW headers
+  - Regex: '^<GLFW/'
+    Priority: 4
+    SortPriority: 4
+  # GLAD/OpenGL headers
+  - Regex: '^<(glad|GL)/'
+    Priority: 5
+    SortPriority: 5
+  # spdlog headers
+  - Regex: '^<spdlog/'
+    Priority: 6
+    SortPriority: 6
+  # Other third-party libraries
+  - Regex: '^<[^/]+/.*\.h(pp)?>'
+    Priority: 7
+    SortPriority: 7
+  # C++ standard library headers
+  - Regex: '^<[a-z_]+>$'
+    Priority: 8
+    SortPriority: 8
+  # C standard library headers
+  - Regex: '^<.*\.h>$'
+    Priority: 9
+    SortPriority: 9
+  # Anything else
+  - Regex: '.*'
+    Priority: 10
+    SortPriority: 10
+SortIncludes: CaseSensitive
+IncludeIsMainRegex: '(Test)?$'
+
+# Namespaces
+CompactNamespaces: false
+FixNamespaceComments: true
+ShortNamespaceLines: 1
+
+# Pointers and references
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Spacing
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceAroundPointerQualifiers: Default
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesInAngles: Never
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# Braces
 BraceWrapping:
-  AfterClass:      true
-  AfterControlStatement: true
-  AfterEnum:       true
-  AfterFunction:   true
-  AfterNamespace:  true
-  AfterStruct:     true
-  AfterUnion:      true
-  AfterExternBlock: true
-  BeforeCatch:     true
-  BeforeElse:      true
-  IndentBraces:    true
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
-ContinuationIndentWidth: 2
+
+# Other
+BinPackArguments: true
+BinPackParameters: true
+BitFieldColonSpacing: Both
 Cpp11BracedListStyle: true
+DeriveLineEnding: true
+DisableFormat: false
+EmptyLineAfterAccessModifier: Never
+EmptyLineBeforeAccessModifier: LogicalBlock
+ExperimentalAutoDetectBinPacking: false
 KeepEmptyLinesAtTheStartOfBlocks: false
-Language:        Cpp
 MaxEmptyLinesToKeep: 1
-NamespaceIndentation: All
-PenaltyExcessCharacter: 100
-PenaltyReturnTypeOnItsOwnLine: 1
-PointerAlignment: Right
-SortIncludes: false
-SpaceBeforeParens: Never
-SpacesInContainerLiterals: false
-Standard:        Cpp11
+PackConstructorInitializers: NextLine
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyBreakTemplateDeclaration: 10
+PenaltyExcessCharacter: 1000000
+PenaltyIndentedWhitespace: 0
+PenaltyReturnTypeOnItsOwnLine: 60
+QualifierAlignment: Leave
+SeparateDefinitionBlocks: Always
+SortUsingDeclarations: true
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterForeachMacros: true
+  AfterFunctionDeclarationName: false
+  AfterFunctionDefinitionName: false
+  AfterIfMacros: true
+  AfterOverloadedOperator: false
+  BeforeNonEmptyParentheses: false

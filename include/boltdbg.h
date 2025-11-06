@@ -3,4 +3,4 @@
 
 #define BOLTDBG_VERSION "0.1.0"
 
-#endif // BOLTDBG_H
+#endif  // BOLTDBG_H
