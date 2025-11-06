@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.15) # local guard if included standalone
 # Collect core sources (placeholder + real sources later)
 set(BOLTDBG_CORE_SOURCES
     dummy.cpp            # placeholder; replace/add real core sources here
+    util/logger.cpp
     # src/core/debugger.cpp
     # src/core/process.cpp
 )

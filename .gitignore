@@ -20,3 +20,5 @@ Makefile
 .DS_Store
 
 external/
+*.log
+*.ini
