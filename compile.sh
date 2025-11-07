@@ -2,19 +2,10 @@
 # build.sh - Professional build script for BoltDBG (improved)
 #
 # Usage:
-#   ./build.sh                          # Debug build (preset: debug)
+#   ./build.sh                          # Incremental debug build
 #   ./build.sh --preset release         # Release build
-#   ./build.sh --preset debug-asan      # Debug with ASAN
-#   ./build.sh --clean                  # Clean build
+#   ./build.sh --clean                  # Clean build (forces rebuild)
 #   ./build.sh --install                # Build and install
-#   ./build.sh --format                 # Format code before build
-#   ./build.sh --help                   # Show help
-#
-# Environment variables:
-#   CMAKE_PRESET     - CMake preset to use (default: debug)
-#   JOBS             - Number of parallel jobs (default: auto -> detected)
-#   BUILD_DIR        - Build directory (default: build/<preset>)
-#   INSTALL_PREFIX   - Install prefix (default: /usr/local)
 
 set -euo pipefail
 
@@ -31,8 +22,8 @@ ROOT_DIR="${SCRIPT_DIR}"
 : "${INSTALL_PREFIX:=/usr/local}"
 : "${VERBOSE:=0}"
 
-# Flags
-CLEAN_BUILD=1
+# Flags - CLEAN_BUILD artık varsayılan olarak 0!
+CLEAN_BUILD=0
 RUN_INSTALL=0
 RUN_TESTS=0
 RUN_FORMAT=0
@@ -105,7 +96,7 @@ USAGE:
 
 OPTIONS:
     --preset PRESET       CMake preset (debug, release, debug-asan, etc.)
-    --clean               Remove build directory before building
+    --clean               Remove build directory before building (forces full rebuild)
     --install             Install after building
     --no-tests            Skip running tests
     --format              Run code formatter before building
@@ -123,11 +114,16 @@ PRESETS:
     ci                    CI/CD build configuration
 
 EXAMPLES:
-    $0                              # Basic debug build
-    $0 --preset release             # Release build
-    $0 --preset debug-asan --clean  # Clean ASAN build
+    $0                              # Incremental debug build (FAST)
+    $0 --preset release             # Incremental release build
+    $0 --clean                      # Clean debug build (rebuilds everything)
+    $0 --clean --preset release     # Clean release build
     $0 --install --prefix ~/local   # Build and install to ~/local
-    $0 --format --preset release    # Format then build release
+
+NOTES:
+    - By default, builds are incremental (only changed files recompile)
+    - Use --clean only when you need to force a complete rebuild
+    - FetchContent dependencies are cached in build/_deps/ and won't re-download
 
 EOF
     exit 0
@@ -214,7 +210,7 @@ log_info "Run install:       ${RUN_INSTALL}"
 
 # Step 1: Code formatting (optional)
 if [[ $RUN_FORMAT -eq 1 ]]; then
-    log_header "Step 1/6: Code Formatting"
+    log_header "Step 1/5: Code Formatting"
     if [[ -f "${ROOT_DIR}/scripts/format.sh" ]]; then
         "${ROOT_DIR}/scripts/format.sh"
         log_success "Code formatted"
@@ -225,20 +221,9 @@ else
     log_info "Skipping code formatting (use --format to enable)"
 fi
 
-# Step 2: Fetch dependencies (optional helper)
-# If you use submodules or have a fetch script, run it here.
-if [[ -f "${ROOT_DIR}/scripts/fetch_deps.sh" ]]; then
-    log_header "Step 2/6: Fetch Dependencies"
-    "${ROOT_DIR}/scripts/fetch_deps.sh" || {
-        log_warning "fetch_deps.sh failed or returned non-zero, continuing anyway"
-    }
-else
-    log_info "No fetch_deps.sh found — relying on CMake FetchContent or vendored deps"
-fi
-
-# Step 3: Clean (optional)
+# Step 2: Clean (optional) - SADECE --clean ile
 if [[ $CLEAN_BUILD -eq 1 ]]; then
-    log_header "Step 3/6: Clean Build Directory"
+    log_header "Step 2/5: Clean Build Directory"
     if [[ -d "${BUILD_DIR}" ]]; then
         log_info "Removing ${BUILD_DIR}..."
         rm -rf "${BUILD_DIR}"
@@ -247,14 +232,16 @@ if [[ $CLEAN_BUILD -eq 1 ]]; then
         log_info "Build directory does not exist, nothing to clean"
     fi
 else
-    log_info "Using existing build directory (use --clean for fresh build)"
+    log_info "Incremental build (use --clean for fresh build)"
+    if [[ -d "${BUILD_DIR}" ]]; then
+        log_info "Using cached dependencies from ${BUILD_DIR}/_deps/"
+    fi
 fi
 
-# Step 4: Configure
-log_header "Step 4/6: CMake Configure"
+# Step 3: Configure
+log_header "Step 3/5: CMake Configure"
 mkdir -p "${BUILD_DIR}"
 
-# If CMakePresets.json exists, prefer using presets. Otherwise fallback to manual args.
 CMAKE_CONF_ARGS=()
 CMAKE_CONF_ARGS+=("-DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}")
 
@@ -263,11 +250,9 @@ if [[ "${VERBOSE}" -eq 1 ]]; then
 fi
 
 if [[ -f "${ROOT_DIR}/CMakePresets.json" ]]; then
-    # Use preset; need to call with -S and -B for predictable behavior
     log_info "Found CMakePresets.json — configuring with preset '${CMAKE_PRESET}'"
     cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" --preset "${CMAKE_PRESET}" "${CMAKE_CONF_ARGS[@]}"
 else
-    # Fallback: map simple preset names to CMAKE_BUILD_TYPE and sanitizer flags
     log_info "No CMakePresets.json — using fallback configure for preset '${CMAKE_PRESET}'"
     case "${CMAKE_PRESET}" in
         debug)
@@ -289,23 +274,20 @@ else
             CMAKE_CONF_ARGS+=("-DCMAKE_BUILD_TYPE=RelWithDebInfo")
             ;;
         *)
-            # default fallback
             CMAKE_CONF_ARGS+=("-DCMAKE_BUILD_TYPE=Debug")
             log_warning "Unknown preset '${CMAKE_PRESET}', falling back to Debug build type"
             ;;
     esac
 
-    # Run configure explicitly with -S and -B
     log_info "Running: cmake -S ${ROOT_DIR} -B ${BUILD_DIR} ${CMAKE_CONF_ARGS[*]}"
     cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" "${CMAKE_CONF_ARGS[@]}"
 fi
 
 log_success "Configuration complete"
 
-# Step 5: Build
-log_header "Step 5/6: Build"
+# Step 4: Build
+log_header "Step 4/5: Build"
 
-# Build args for cmake --build
 CMAKE_BUILD_ARGS=(--build "${BUILD_DIR}" --parallel "${JOBS}")
 if [[ "${VERBOSE}" -eq 1 ]]; then
     CMAKE_BUILD_ARGS+=(--verbose)
@@ -315,9 +297,9 @@ log_info "Running: cmake ${CMAKE_BUILD_ARGS[*]}"
 cmake "${CMAKE_BUILD_ARGS[@]}"
 log_success "Build complete"
 
-# Step 6: Tests
+# Step 5: Tests
 if [[ $RUN_TESTS -eq 1 ]]; then
-    log_header "Step 6/6: Run Tests"
+    log_header "Step 5/5: Run Tests"
     if command -v ctest >/dev/null 2>&1; then
         (
             cd "${BUILD_DIR}"
@@ -331,7 +313,7 @@ if [[ $RUN_TESTS -eq 1 ]]; then
         log_warning "ctest not found, skipping tests"
     fi
 else
-    log_info "Skipping tests (use --no-tests to enable)"
+    log_info "Skipping tests"
 fi
 
 # Optional: Install
@@ -347,28 +329,21 @@ fi
 
 log_header "Build Complete"
 
-# Try to guess executable path, but don't assume too much
 POSSIBLE_BIN="${BUILD_DIR}/src/boltdbg"
 if [[ -x "${POSSIBLE_BIN}" ]]; then
     log_success "Executable: ${POSSIBLE_BIN}"
 else
     log_info "Executable not found at ${POSSIBLE_BIN}. Check your targets inside ${BUILD_DIR}"
-    log_info "You can inspect build tree or run: cmake --build ${BUILD_DIR} --target <your-target>"
 fi
 
 if [[ $RUN_INSTALL -eq 1 ]]; then
-    log_success "Installed to: ${INSTALL_PREFIX}/bin/ (if install step created it)"
+    log_success "Installed to: ${INSTALL_PREFIX}/bin/"
 fi
 
 echo
-log_info "To run the application (if present):"
-echo "  ${POSSIBLE_BIN}"
-echo
-log_info "To run tests manually:"
-echo "  cd ${BUILD_DIR} && ctest --output-on-failure"
-echo
-log_info "To install manually:"
-echo "  cmake --install ${BUILD_DIR} --prefix ${INSTALL_PREFIX}"
+log_info "Next time, just run: ./build.sh (incremental build, very fast!)"
+log_info "To clean rebuild:     ./build.sh --clean"
+log_info "To run tests:         cd ${BUILD_DIR} && ctest --output-on-failure"
 echo
 
 exit 0

@@ -25,7 +25,8 @@
 
 int main(int argc, char** argv) {
     core::ProcessControl processController;
-    processController.launchTarget("test");
+    std::list<std::string> targetProcess = {"/home/levent/Dev/boltdbg/demo/hello", "levent"};
+    processController.launchTarget(targetProcess);
 
     if (!glfwInit()) {
         LOG_ERROR("Failed to initialize GLFW");
