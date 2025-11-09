@@ -12,9 +12,10 @@ namespace core {
 class ProcessControl {
   private:
     pid_t pid;
+    int status;
 
   public:
-    ProcessControl() : pid(-1) {}
+    ProcessControl() : pid(-1), status(-1) {}
 
     ~ProcessControl() {
         // If attached to a process, detach before destruction
@@ -24,10 +25,12 @@ class ProcessControl {
     }
 
     void launchProcess(const std::list<std::string>& targetProcess);
-    void attachProcess();
-    void readMemory(const void* addr);
-    void writeMemory(const void* addr, const void* data);
+    void attachProcess();  // only needed for debuggin already running processes. sice we are
+                           // debugging from star, doesnt required much.
+    long readMemory(void* addr);
+    void writeMemory(void* addr, void* data);
     void getPid();
+    void continueProcess();
 
   protected:
     void _ptrace(enum __ptrace_request request, pid_t pid, void* addr, void* data);

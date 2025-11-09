@@ -9,6 +9,7 @@
  */
 
 #include <spdlog/spdlog.h>
+
 #include <memory>
 
 namespace Log {  // NOTE: capital 'L' to avoid collision with C math 'log'
@@ -21,7 +22,7 @@ std::shared_ptr<spdlog::logger>& get();
 // ============================================================================
 // Logging Macros - Capture file/line/function automatically
 // ============================================================================
-// 
+//
 // IMPORTANT: These use SPDLOG_LOGGER_* macros which capture source location
 // for %s (source file), %# (line number), and %! (function name) patterns.
 //
