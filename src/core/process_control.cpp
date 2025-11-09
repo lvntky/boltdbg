@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 namespace core {
-void ProcessControl::launchTarget(const std::list<std::string>& targetProcess) {
+void ProcessControl::launchProcess(const std::list<std::string>& targetProcess) {
     if (targetProcess.empty()) {
         throw std::invalid_argument("launchTarget: targetProcess is empty.");
     }
@@ -30,7 +30,7 @@ void ProcessControl::launchTarget(const std::list<std::string>& targetProcess) {
         if (execvp(argv[0], argv.data()) == -1) {
             throw std::runtime_error("execvp() failed.");
         }
-        raise(SIGSTOP);
+
 
     } else {
 

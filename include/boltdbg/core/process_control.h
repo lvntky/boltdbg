@@ -10,8 +10,24 @@
 namespace core {
 
 class ProcessControl {
+  private:
+    pid_t pid;
+
   public:
-    void launchTarget(const std::list<std::string>& targetProcess);
+    ProcessControl() : pid(-1) {}
+
+    ~ProcessControl() {
+        // If attached to a process, detach before destruction
+        if (pid > 0) {
+            ptrace(PTRACE_DETACH, pid, nullptr, nullptr);
+        }
+    }
+
+    void launchProcess(const std::list<std::string>& targetProcess);
+    void attachProcess();
+    void readMemory(const void* addr);
+    void writeMemory(const void* addr, const void* data);
+    void getPid();
 
   protected:
     void _ptrace(enum __ptrace_request request, pid_t pid, void* addr, void* data);
