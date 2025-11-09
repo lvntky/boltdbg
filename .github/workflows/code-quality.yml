@@ -98,7 +98,7 @@ jobs:
     
     - name: Upload clang-tidy results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: clang-tidy-results
         path: build/clang-tidy-output.txt
@@ -226,7 +226,7 @@ jobs:
     
     - name: Upload build artifacts
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-logs-${{ matrix.os }}-${{ matrix.build_type }}
         path: |
