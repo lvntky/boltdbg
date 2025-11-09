@@ -1,6 +1,5 @@
 #include <boltdbg/core/process_control.h>
 #include <boltdbg/util/logger.h>
-#include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -19,7 +18,7 @@ void ProcessControl::launchTarget(const std::list<std::string>& targetProcess) {
         throw std::runtime_error("fork() failed.");
     } else if (pid == 0) {
         LOG_INFO("child process started");
-        ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+        _ptrace(PTRACE_TRACEME, 0, NULL, NULL);
         LOG_INFO("PTRACE_TRACEME called by child");
 
         std::vector<char*> argv;
@@ -31,10 +30,16 @@ void ProcessControl::launchTarget(const std::list<std::string>& targetProcess) {
         if (execvp(argv[0], argv.data()) == -1) {
             throw std::runtime_error("execvp() failed.");
         }
+        raise(SIGSTOP);
+
     } else {
-        wait(NULL);
-        ptrace(PTRACE_CONT, pid, NULL, NULL);
-        LOG_INFO("PTRACE_CONT called by parent");
+
+    }
+}
+
+void ProcessControl::_ptrace(enum __ptrace_request request, pid_t pid, void* addr, void* data) {
+    if (ptrace(request, pid, addr, data) == -1) {
+        throw std::runtime_error("ptrace failed.");
     }
 }
 }  // namespace core
