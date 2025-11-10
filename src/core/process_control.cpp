@@ -42,7 +42,7 @@ void ProcessControl::launchProcess(const std::list<std::string>& targetProcess) 
             LOG_INFO("Process does not stopped.");
         }
 
-        continueProcess();
+        stepProcess();
     }
 }
 
@@ -60,6 +60,13 @@ void ProcessControl::continueProcess() {
     LOG_INFO("continueProcess START. Status: {}", status, 0);
     _ptrace(PTRACE_CONT, pid, nullptr, nullptr);
     LOG_INFO("continueProcess END. Status: {}", waitpid(pid, &status, 0));
+}
+
+
+void ProcessControl::stepProcess() {
+    LOG_INFO("stepProcess START. Status: {}", status, 0);
+    _ptrace(PTRACE_SINGLESTEP, pid, nullptr, nullptr);
+    LOG_INFO("stepProcess END. Status: {}", waitpid(pid, &status, 0));
 }
 
 void ProcessControl::_ptrace(enum __ptrace_request request, pid_t pid, void* addr, void* data) {
