@@ -72,10 +72,9 @@ void ProcessControl::stepProcess() {
 
     LOG_INFO("stepProcess START. Status: {}", status);
 
-    // Tek instruction çalıştır
+
     _ptrace(PTRACE_SINGLESTEP, pid, nullptr, nullptr);
 
-    // Child durana kadar bekle
     waitpid(pid, &status, 0);
 
     if (WIFSTOPPED(status)) {
