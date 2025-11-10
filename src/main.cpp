@@ -29,7 +29,7 @@
     #include <string>
 
 void runCLI(core::ProcessControl& processController) {
-    LOG_INFO("CLI mode - Commands: step(s), continue(c), help(h), quit(q)");
+    LOG_INFO("CLI mode - Commands: step(s), continue(c), help(h), quit(q), registers(r)");
 
     std::string line;
     while (true) {
@@ -59,7 +59,12 @@ void runCLI(core::ProcessControl& processController) {
             } else if (line == "quit" || line == "q") {
                 LOG_INFO("Exiting");
                 break;
-            } else {
+
+	    } else if(line == "registers" || line == "r") {
+		    LOG_INFO("Printing current register status");
+		    LOG_INFO("{}", processController.regsToString());
+
+	    } else {
                 LOG_WARN("Unknown command: '{}'. Type 'help' for commands", line);
             }
         } catch (const std::exception& e) {

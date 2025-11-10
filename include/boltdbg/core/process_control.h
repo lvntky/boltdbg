@@ -3,6 +3,7 @@
 #define CORE_PROCESS_CONTROL_H_
 
 #include <sys/ptrace.h>
+#include <sys/user.h>
 
 #include <list>
 #include <string>
@@ -13,9 +14,10 @@ class ProcessControl {
   private:
     pid_t pid;
     int status;
+    struct user_regs_struct* regs;
 
   public:
-    ProcessControl() : pid(-1), status(-1) {}
+    ProcessControl() : pid(-1), status(-1), regs(nullptr) {}
 
     ~ProcessControl() {
         // If attached to a process, detach before destruction
@@ -31,7 +33,9 @@ class ProcessControl {
     void writeMemory(void* addr, void* data);
     void getPid();
     void continueProcess();
-	void stepProcess();
+    void stepProcess();
+    void readRegs();
+    std::string regsToString();
 
   protected:
     void _ptrace(enum __ptrace_request request, pid_t pid, void* addr, void* data);
