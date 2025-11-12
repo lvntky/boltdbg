@@ -3,14 +3,14 @@
 
 ## BOLT-006 · Linux Process Launch
 
-* [ ] Create `core/ProcessControl` class skeleton with `pid_t pid`, process state, and methods.
-* [ ] Implement `ProcessControl::launchProcess(const std::list<std::string>& args)`:
+* [x] Create `core/ProcessControl` class skeleton with `pid_t pid`, process state, and methods.
+* [x] Implement `ProcessControl::launchProcess(const std::list<std::string>& args)`:
 
-  * [ ] Perform `fork()`.
+  * [x] Perform `fork()`.
   * [ ] In child:
 
-    * [ ] Call `ptrace(PTRACE_TRACEME, 0, NULL, NULL)`.
-    * [ ] Execute target binary with `execvp()`.
+    * [x] Call `ptrace(PTRACE_TRACEME, 0, NULL, NULL)`.
+    * [x] Execute target binary with `execvp()`.
     * [ ] Handle `execvp` failure with `_exit(errno)`.
   * [ ] In parent:
 
@@ -52,13 +52,13 @@
 
 ## BOLT-009 · Linux Register Access
 
-* [ ] Add `readRegisters()` using `ptrace(PTRACE_GETREGS, pid, 0, &user_regs_struct)`.
+* [x] Add `readRegisters()` using `ptrace(PTRACE_GETREGS, pid, 0, &user_regs_struct)`.
 
-  * [ ] Store in local `regs` buffer.
-  * [ ] Convert to internal struct (e.g. `RegisterSet` abstraction).
+  * [x] Store in local `regs` buffer.
+  * [x] Convert to internal struct (e.g. `RegisterSet` abstraction).
 * [ ] Add `writeRegisters(const RegisterSet& regs)` using `PTRACE_SETREGS`.
 
-  * [ ] Support all x86_64 GPRs: RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP, R8-R15, RIP, EFLAGS.
+  * [x] Support all x86_64 GPRs: RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP, R8-R15, RIP, EFLAGS.
 * [ ] Implement getter/setter utilities:
 
   * [ ] `getRegister(const std::string&)`

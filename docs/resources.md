@@ -4,3 +4,4 @@
 
 ## Linux(boltdbg::core)
 - [ptrace Command Linux: Complete Guide to Process Tracing System Call](https://codelucky.com/ptrace-command-linux/)
+- [Eli Bendersky's website - debuggers](https://eli.thegreenplace.net/tag/debuggers)
