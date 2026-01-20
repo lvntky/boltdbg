@@ -60,11 +60,11 @@ void runCLI(core::ProcessControl& processController) {
                 LOG_INFO("Exiting");
                 break;
 
-	    } else if(line == "registers" || line == "r") {
-		    LOG_INFO("Printing current register status");
-		    LOG_INFO("{}", processController.regsToString());
+            } else if (line == "registers" || line == "r") {
+                LOG_INFO("Printing current register status");
+                LOG_INFO("{}", processController.regsToString());
 
-	    } else {
+            } else {
                 LOG_WARN("Unknown command: '{}'. Type 'help' for commands", line);
             }
         } catch (const std::exception& e) {

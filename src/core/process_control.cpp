@@ -72,7 +72,6 @@ void ProcessControl::stepProcess() {
 
     LOG_INFO("stepProcess START. Status: {}", status);
 
-
     _ptrace(PTRACE_SINGLESTEP, pid, nullptr, nullptr);
 
     waitpid(pid, &status, 0);
@@ -80,7 +79,6 @@ void ProcessControl::stepProcess() {
     if (WIFSTOPPED(status)) {
         LOG_INFO("Child stopped after single step. Signal: {}", WSTOPSIG(status));
 
-        // Step sonrası registerleri oku
         if (!regs) {
             regs = new user_regs_struct();
         }
